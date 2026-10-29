@@ -1,0 +1,27 @@
+{
+  "name": "assignment-submission-portal",
+  "version": "1.0.0",
+  "description": "CSC418 DevOps Lab Midterm - assignment submission portal with automated testing, CI/CD, local report receiver, GitHub Pages and email reporting.",
+  "private": true,
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node scripts/run-tests.js",
+    "report": "node scripts/create-report.js",
+    "report:send": "node scripts/send-report.js",
+    "report:email": "node scripts/send-email.js",
+    "report:email:dry": "node scripts/send-email.js --dry-run",
+    "test:report": "node scripts/run-tests.js && node scripts/create-report.js",
+    "serve": "node scripts/serve.js",
+    "receiver": "python receiver/server.py",
+    "test:receiver": "python -m unittest discover -s tests -p \"test_*.py\" -v",
+    "defect:on": "node scripts/demo-defect.js on",
+    "defect:off": "node scripts/demo-defect.js off",
+    "defect:status": "node scripts/demo-defect.js status"
+  },
+  "dependencies": {
+    "nodemailer": "^6.10.1"
+  }
+}

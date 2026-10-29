@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Assignment Submission Portal</title>
+  <meta name="description" content="Submit assignment links and see all saved submissions. CSC418 DevOps Lab Midterm project.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="topbar">
+    <button id="menu-toggle" class="menu-btn" type="button" aria-expanded="false" aria-controls="sidebar">
+      <span class="sr-only">Toggle navigation menu</span>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <span class="topbar-title">Submission Portal</span>
+  </header>
+
+  <aside id="sidebar" class="sidebar" aria-label="Main navigation">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M8 8h8M8 12h5"/></svg>
+      </span>
+      <span class="brand-text">
+        <strong>Submission Portal</strong>
+        <small>Computer Science Dept.</small>
+      </span>
+    </div>
+    <nav>
+      <ul class="nav-list">
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#submit">New submission</a></li>
+        <li><a href="#submissions">Submissions <span id="nav-count" class="badge">0</span></a></li>
+      </ul>
+    </nav>
+    <p class="sidebar-foot">CSC418 DevOps<br>Lab Midterm Project</p>
+  </aside>
+
+  <main id="main" class="content">
+    <section id="overview" class="hero" aria-labelledby="hero-title">
+      <h1 id="hero-title">Hand in your assignment link in under a minute.</h1>
+      <p>Fill in your details, paste the link to your work, and the portal checks everything before saving it. Every change to this site is tested automatically.</p>
+      <a class="btn btn-light" href="#submit">Start a submission</a>
+    </section>
+
+    <section class="stats" aria-label="Submission statistics">
+      <div class="card stat">
+        <span class="stat-label">Total submissions</span>
+        <strong id="stat-total" class="stat-value">0</strong>
+      </div>
+      <div class="card stat">
+        <span class="stat-label">Students</span>
+        <strong id="stat-students" class="stat-value">0</strong>
+      </div>
+      <div class="card stat">
+        <span class="stat-label">Latest submission</span>
+        <strong id="stat-latest" class="stat-text">No submissions yet</strong>
+      </div>
+    </section>
+
+    <section id="submit" class="card" aria-labelledby="submit-title">
+      <h2 id="submit-title">New submission</h2>
+      <p class="muted">All four fields are required. Only a link is needed; files are not uploaded.</p>
+
+      <div id="form-status" class="status" role="status" aria-live="polite" hidden></div>
+
+      <form id="submission-form" novalidate>
+        <div class="grid">
+          <div class="field">
+            <label for="studentName">Student name</label>
+            <input id="studentName" name="studentName" type="text" autocomplete="name" required aria-describedby="studentName-error" placeholder="e.g. Ayesha">
+            <p id="studentName-error" class="error" aria-live="polite"></p>
+          </div>
+          <div class="field">
+            <label for="registrationNumber">Registration number</label>
+            <input id="registrationNumber" name="registrationNumber" type="text" autocomplete="off" required aria-describedby="registrationNumber-error" placeholder="e.g. FA23-BSE-032">
+            <p id="registrationNumber-error" class="error" aria-live="polite"></p>
+          </div>
+          <div class="field">
+            <label for="assignmentTitle">Assignment title</label>
+            <input id="assignmentTitle" name="assignmentTitle" type="text" autocomplete="off" required aria-describedby="assignmentTitle-error" placeholder="e.g. DevOps Lab Assignment 1">
+            <p id="assignmentTitle-error" class="error" aria-live="polite"></p>
+          </div>
+          <div class="field">
+            <label for="submissionUrl">Submission URL</label>
+            <input id="submissionUrl" name="submissionUrl" type="text" inputmode="url" autocomplete="off" required aria-describedby="submissionUrl-hint submissionUrl-error" placeholder="https://github.com/username/repository">
+            <p id="submissionUrl-hint" class="hint">Must start with http:// or https://</p>
+            <p id="submissionUrl-error" class="error" aria-live="polite"></p>
+          </div>
+        </div>
+        <div class="actions">
+          <button type="submit" class="btn btn-primary">Submit assignment</button>
+          <button type="reset" class="btn btn-ghost">Reset form</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="submissions" class="card" aria-labelledby="list-title">
+      <div class="list-head">
+        <div>
+          <h2 id="list-title">Saved submissions</h2>
+          <p class="muted">Newest first.</p>
+        </div>
+        <button id="clear-all" type="button" class="btn btn-danger" disabled>Clear all</button>
+      </div>
+
+      <div id="empty-state" class="empty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l2-3h14l2 3v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 7h18M9 12h6"/></svg>
+        <h3>Nothing submitted yet</h3>
+        <p>Saved submissions will show up here as soon as you send your first one.</p>
+      </div>
+
+      <div id="table-wrap" class="table-wrap" hidden>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Student</th>
+              <th scope="col">Reg. no.</th>
+              <th scope="col">Assignment</th>
+              <th scope="col">Link</th>
+              <th scope="col">Submitted</th>
+            </tr>
+          </thead>
+          <tbody id="submission-rows"></tbody>
+        </table>
+      </div>
+
+      <p id="storage-note" class="note">
+        Submissions are saved in this browser (localStorage). They are not sent to a server, so they stay on this device and disappear if you clear your browser data.
+      </p>
+    </section>
+  </main>
+
+  <dialog id="confirm-dialog" aria-labelledby="confirm-title">
+    <h2 id="confirm-title">Delete all submissions?</h2>
+    <p>This removes every saved submission from this browser. It cannot be undone.</p>
+    <div class="actions">
+      <button id="confirm-yes" type="button" class="btn btn-danger">Yes, delete all</button>
+      <button id="confirm-no" type="button" class="btn btn-ghost">Cancel</button>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
