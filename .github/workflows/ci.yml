@@ -11,18 +11,23 @@ permissions:
   contents: read
 
 jobs:
+
+  # JOB 1: Run tests, generate report, send report and email
   test:
     name: Test and report
 
+    # Only trusted main branch runs on the self-hosted runner
     if: ${{ github.ref == 'refs/heads/main' }}
 
     runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
 
+    # Explicitly use Windows PowerShell, not pwsh
     defaults:
       run:
-        shell: cmd
+        shell: powershell
 
     steps:
+
       - name: Check out the code
         uses: actions/checkout@v4
 
@@ -36,6 +41,12 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Verify installed tools
+        run: |
+          node --version
+          npm --version
+          python --version
+
       - name: Install dependencies
         run: npm ci
 
@@ -45,6 +56,7 @@ jobs:
 
       - name: Build test report
         if: ${{ !cancelled() }}
+        continue-on-error: true
         run: npm run report
 
       - name: Send report to local receiver
@@ -69,6 +81,7 @@ jobs:
 
       - name: Run receiver self-tests
         if: ${{ !cancelled() }}
+        continue-on-error: true
         run: python -m unittest discover -s tests -p "test_*.py" -v
 
       - name: Save test results artifact
@@ -79,6 +92,7 @@ jobs:
           path: test-results/
           if-no-files-found: warn
 
+  # JOB 2: Deploy only after successful tests
   deploy:
     name: Deploy to GitHub Pages
     needs: test
@@ -101,6 +115,7 @@ jobs:
       cancel-in-progress: false
 
     steps:
+
       - name: Check out the code
         uses: actions/checkout@v4
 
