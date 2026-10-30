@@ -1,7 +1,6 @@
 
 name: CI - test, report and deploy
 
-# Run on push to main or manual execution.
 on:
   push:
     branches:
@@ -12,23 +11,18 @@ permissions:
   contents: read
 
 jobs:
-
-  # JOB 1: Testing, reporting and email
   test:
     name: Test and report
 
-    # Run only trusted main branch workflows.
     if: ${{ github.ref == 'refs/heads/main' }}
 
-    # Uses the self-hosted Windows runner through CI_RUNNER variable.
     runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
 
     defaults:
       run:
-        shell: pwsh
+        shell: powershell
 
     steps:
-
       - name: Check out the code
         uses: actions/checkout@v4
 
@@ -45,17 +39,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Run automated tests
       - name: Run automated tests
         id: tests
         run: npm test
 
-      # Generate JSON report even if tests fail
       - name: Build test report
         if: ${{ !cancelled() }}
         run: npm run report
 
-      # Send report to your laptop's local receiver
       - name: Send report to local receiver
         if: ${{ !cancelled() }}
         continue-on-error: true
@@ -64,7 +55,6 @@ jobs:
           RECEIVER_TOKEN: ${{ secrets.RECEIVER_TOKEN }}
         run: npm run report:send
 
-      # Send email for passing and failing tests
       - name: Email test report
         if: ${{ !cancelled() }}
         continue-on-error: true
@@ -77,12 +67,10 @@ jobs:
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
         run: npm run report:email
 
-      # Run Python receiver tests
       - name: Run receiver self-tests
         if: ${{ !cancelled() }}
         run: python -m unittest discover -s tests -p "test_*.py" -v
 
-      # Upload reports to GitHub Actions artifacts
       - name: Save test results artifact
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
@@ -91,7 +79,6 @@ jobs:
           path: test-results/
           if-no-files-found: warn
 
-  # JOB 2: Deploy website only after successful tests
   deploy:
     name: Deploy to GitHub Pages
     needs: test
@@ -114,7 +101,6 @@ jobs:
       cancel-in-progress: false
 
     steps:
-
       - name: Check out the code
         uses: actions/checkout@v4
 
