@@ -76,7 +76,7 @@
       errors.studentName = MESSAGES.nameRequired;
     }
 
-    if (isBlank(values.registrationNumber)) { // DEMO-DEFECT-LINE
+    if (values.registrationNumber === undefined) { // DEMO-DEFECT-LINE
       errors.registrationNumber = MESSAGES.registrationRequired;
     }
     // Only check the format when something was typed.

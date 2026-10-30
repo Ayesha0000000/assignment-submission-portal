@@ -1,28 +1,34 @@
+
 name: CI - test, report and deploy
 
-# Runs on every push to any branch, on pull requests, and when started by hand.
+# Run on push to main or manual execution.
 on:
   push:
-  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
-# Least privilege: the test job can only read the code.
 permissions:
   contents: read
 
 jobs:
-  # ---------------------------------------------------------------------------
-  # JOB 1 - run the tests, build the JSON report, deliver it, email it
-  # ---------------------------------------------------------------------------
+
+  # JOB 1: Testing, reporting and email
   test:
     name: Test and report
-    # Normal use: GitHub's own runner. For the "run CI locally" option, create a
-    # repository variable CI_RUNNER = self-hosted (see README, section 8).
+
+    # Run only trusted main branch workflows.
+    if: ${{ github.ref == 'refs/heads/main' }}
+
+    # Uses the self-hosted Windows runner through CI_RUNNER variable.
     runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+
     defaults:
       run:
-        shell: bash
+        shell: pwsh
+
     steps:
+
       - name: Check out the code
         uses: actions/checkout@v4
 
@@ -31,7 +37,7 @@ jobs:
         with:
           node-version: 22
 
-      - name: Set up Python (for the receiver self-test)
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -39,27 +45,29 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # If any test fails this step fails, and so does the whole job.
-      # The steps below still run because they use "if: !cancelled()".
+      # Run automated tests
       - name: Run automated tests
         id: tests
         run: npm test
 
-      - name: Build test-report.json from the real results
+      # Generate JSON report even if tests fail
+      - name: Build test report
         if: ${{ !cancelled() }}
         run: npm run report
 
-      - name: Send report to the local receiver
+      # Send report to your laptop's local receiver
+      - name: Send report to local receiver
         if: ${{ !cancelled() }}
-        continue-on-error: true          # a delivery problem must never hide the test result
+        continue-on-error: true
         env:
           RECEIVER_URL: ${{ secrets.RECEIVER_URL }}
           RECEIVER_TOKEN: ${{ secrets.RECEIVER_TOKEN }}
         run: npm run report:send
 
-      - name: Email the report (optional bonus)
+      # Send email for passing and failing tests
+      - name: Email test report
         if: ${{ !cancelled() }}
-        continue-on-error: true          # an email problem must never hide the test result
+        continue-on-error: true
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
@@ -69,11 +77,13 @@ jobs:
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
         run: npm run report:email
 
-      - name: Run receiver self-test
+      # Run Python receiver tests
+      - name: Run receiver self-tests
         if: ${{ !cancelled() }}
         run: python -m unittest discover -s tests -p "test_*.py" -v
 
-      - name: Save test results as a downloadable artifact
+      # Upload reports to GitHub Actions artifacts
+      - name: Save test results artifact
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
@@ -81,44 +91,47 @@ jobs:
           path: test-results/
           if-no-files-found: warn
 
-  # ---------------------------------------------------------------------------
-  # JOB 2 - publish to GitHub Pages (bonus)
-  # "needs: test" means this job runs ONLY if the test job succeeded.
-  # If a test fails, this job is skipped and the old site stays online.
-  # ---------------------------------------------------------------------------
+  # JOB 2: Deploy website only after successful tests
   deploy:
     name: Deploy to GitHub Pages
     needs: test
+
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
-      pages: write        # allowed to publish to Pages
-      id-token: write     # lets Pages verify the deployment came from this workflow
+      pages: write
+      id-token: write
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     concurrency:
       group: pages
       cancel-in-progress: false
+
     steps:
+
       - name: Check out the code
         uses: actions/checkout@v4
 
-      - name: Prepare the static site (only the public files)
+      - name: Prepare static website
         run: |
           mkdir _site
           cp index.html styles.css app.js _site/
           touch _site/.nojekyll
 
-      - name: Configure Pages
+      - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload the site
+      - name: Upload website
         uses: actions/upload-pages-artifact@v3
         with:
           path: _site
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy website
         id: deployment
         uses: actions/deploy-pages@v4
